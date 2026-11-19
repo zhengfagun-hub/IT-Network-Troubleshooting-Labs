@@ -1,0 +1,71 @@
+Case 06 – Static Routing Troubleshooting
+
+1. Projektziel
+
+In diesem Projekt habe ich mit Cisco Packet Tracer ein Netzwerk mit zwei Routern, zwei Switches, einem PC und einem Server aufgebaut.
+
+Ziel war es, ein Routing-Problem zwischen zwei verschiedenen Netzwerken zu untersuchen und zu beheben.
+
+2. Netzwerkaufbau
+
+Das Netzwerk besteht aus zwei lokalen Netzwerken, die über zwei Router miteinander verbunden sind.
+
+Gerät	IP-Adresse	Funktion
+PC0	10.10.10.10/24	Client im ersten Netzwerk
+Router0	10.10.10.1/24	Gateway für PC0
+Router0	172.16.0.1/30	Verbindung zu Router1
+Router1	172.16.0.2/30	Verbindung zu Router0
+Router1	10.20.20.1/24	Gateway für Server0
+Server0	10.20.20.100/24	Server im zweiten Netzwerk
+
+3. Fehlerbeschreibung
+
+Bei den ersten Verbindungstests konnte PC0 sein eigenes Gateway erreichen. Die Verbindung zum Server0 funktionierte jedoch nicht.
+
+Der Ping-Test zu 10.20.20.100 schlug zunächst fehl.
+
+4. Fehlersuche
+
+Zuerst habe ich die IP-Adressen und den Status der Router-Schnittstellen überprüft.
+
+Dafür habe ich folgende Befehle verwendet:
+
+show ip interface brief
+show ip route
+ping 172.16.0.1
+
+Bei der Überprüfung der Routing-Tabelle von Router1 stellte ich fest, dass keine Route zum Netzwerk 10.10.10.0/24 vorhanden war.
+
+Dadurch konnte Router1 die Antwortpakete nicht an PC0 zurücksenden.
+
+5. Fehlerbehebung
+
+Um das Problem zu beheben, habe ich auf Router1 eine statische Route zum Netzwerk von PC0 eingerichtet.
+
+enable
+configure terminal
+ip route 10.10.10.0 255.255.255.0 172.16.0.1
+end
+
+Anschließend habe ich die Routing-Tabelle erneut überprüft:
+
+show ip route
+
+Die neue Route wurde mit dem Kennzeichen S (Static Route) angezeigt.
+
+6. Ergebnis
+
+Nach der Konfiguration konnte PC0 den Server0 unter 10.20.20.100 erfolgreich erreichen.
+
+Auch die Verbindung vom Server0 zum PC0 funktionierte.
+
+7. Erkenntnisse
+
+Bei diesem Projekt habe ich gelernt:
+
+* wie statische Routen auf Cisco-Routern eingerichtet werden;
+* wie man Routing-Tabellen mit show ip route überprüft;
+* warum für eine erfolgreiche Kommunikation sowohl der Hinweg als auch der Rückweg funktionieren müssen;
+* wie man Routing-Probleme mit ping und weiteren Diagnosebefehlen systematisch untersucht.
+
+Fazit: Eine funktionierende physische Verbindung bedeutet nicht automatisch, dass zwei Netzwerke miteinander kommunizieren können. Auch die Routing-Tabellen müssen korrekt konfiguriert sein.
