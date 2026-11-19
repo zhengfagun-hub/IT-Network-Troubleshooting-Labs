@@ -1,0 +1,86 @@
+Case 05 – ACL Troubleshooting
+
+1. Projektziel
+
+In diesem Projekt habe ich mit Cisco Packet Tracer ein Netzwerk mit mehreren VLANs und einem Router aufgebaut.
+
+Ziel war es, ein Problem mit einer Access Control List (ACL) zu untersuchen und zu beheben.
+
+Dabei sollte der Zugriff auf einen Webserver über HTTP erlaubt werden, während ICMP-Pakete weiterhin blockiert bleiben.
+
+2. Netzwerkaufbau
+
+Das Netzwerk besteht aus zwei VLANs:
+
+* VLAN 10 (Marketing): 192.168.10.0/24
+* VLAN 20 (Finance): 192.168.20.0/24
+
+Die Kommunikation zwischen den VLANs erfolgt über einen Router.
+
+Der Webserver befindet sich im VLAN 20 und hat die IP-Adresse 192.168.20.200.
+
+3. Fehlerbeschreibung
+
+Ein Client aus VLAN 10 konnte nicht auf den Webserver in VLAN 20 zugreifen.
+
+Andere Netzwerkverbindungen funktionierten jedoch. Dadurch wurde deutlich, dass nicht die gesamte Kommunikation zwischen den VLANs gestört war.
+
+4. Fehlersuche
+
+Zuerst habe ich die Netzwerkverbindungen überprüft und anschließend die ACL-Konfiguration des Routers untersucht.
+
+Dafür habe ich folgende Befehle verwendet:
+
+show access-lists
+show ip interface gigabitEthernet 0/0.10
+
+Dabei stellte ich fest, dass die ACL 101 den gesamten IP-Verkehr von VLAN 10 zum Webserver blockierte.
+
+Die entsprechende Regel lautete:
+
+10 deny ip 192.168.10.0 0.0.0.255 host 192.168.20.200
+20 permit ip any any
+
+Da die erste Regel auch TCP-Verbindungen betraf, war der HTTP-Zugriff auf den Webserver nicht möglich.
+
+5. Fehlerbehebung
+
+Um den HTTP-Zugriff zu ermöglichen, habe ich eine zusätzliche Regel mit einer höheren Priorität eingefügt.
+
+enable
+configure terminal
+ip access-list extended 101
+5 permit tcp 192.168.10.0 0.0.0.255 host 192.168.20.200 eq 80
+end
+
+Anschließend habe ich die ACL erneut überprüft:
+
+show access-lists
+
+Die ACL enthielt nun folgende Regeln:
+
+5 permit tcp 192.168.10.0 0.0.0.255 host 192.168.20.200 eq 80
+10 deny ip 192.168.10.0 0.0.0.255 host 192.168.20.200
+20 permit ip any any
+
+Die Regeln werden der Reihe nach überprüft. Deshalb wird der HTTP-Verkehr bereits durch Regel 5 erlaubt, bevor Regel 10 angewendet werden kann.
+
+6. Ergebnis
+
+Nach der Änderung konnte der Client aus VLAN 10 erfolgreich auf den Webserver über HTTP zugreifen.
+
+Ein Ping zum selben Server blieb jedoch weiterhin erfolglos, da ICMP-Pakete durch die ACL blockiert wurden.
+
+Damit funktionierte die Zugriffskontrolle wie vorgesehen.
+
+7. Erkenntnisse
+
+Bei diesem Projekt habe ich gelernt:
+
+* wie Access Control Lists auf Cisco-Routern funktionieren;
+* wie man ACL-Regeln mit show access-lists überprüft;
+* warum die Reihenfolge der ACL-Regeln wichtig ist;
+* wie man bestimmte Protokolle und Ports gezielt erlaubt oder blockiert;
+* warum ein fehlgeschlagener Ping-Test nicht automatisch bedeutet, dass ein Server vollständig unerreichbar ist.
+
+Fazit: Mit einer korrekt konfigurierten ACL lässt sich der Netzwerkverkehr gezielt kontrollieren. Bei der Fehlersuche müssen sowohl die einzelnen Regeln als auch ihre Reihenfolge berücksichtigt werden.
